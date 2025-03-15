@@ -145,7 +145,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of CANSenderTask */
-  osThreadDef(CANSenderTask, StartCANSenderTask, osPriorityHigh, 0, 1280);
+  osThreadDef(CANSenderTask, StartCANSenderTask, osPriorityNormal, 0, 512);
   CANSenderTaskHandle = osThreadCreate(osThread(CANSenderTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -257,7 +257,7 @@ static void MX_FDCAN1_Init(void)
   hfdcan1.Init.DataTimeSeg1 = 2;
   hfdcan1.Init.DataTimeSeg2 = 1;
   hfdcan1.Init.MessageRAMOffset = 0;
-  hfdcan1.Init.StdFiltersNbr = 1;
+  hfdcan1.Init.StdFiltersNbr = 0;
   hfdcan1.Init.ExtFiltersNbr = 0;
   hfdcan1.Init.RxFifo0ElmtsNbr = 1;
   hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
@@ -355,15 +355,14 @@ PUTCHAR_PROTOTYPE
   return ch;
 }
 
-void handle_data_received(){
+void handle_data_received(void){
 
-	printf("<- Recv CAN Data = ");
+	printf("<- Recv CAN Data (Id : %d) = ",RxHeader.Identifier);
 
 	for (int i = 0; i < sizeof(RxData); i++)
 		printf("0x%x ",RxData[i]);
 
 	printf("\n\n");
-
 }
 
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
@@ -383,17 +382,17 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 void send_can_data(void){
 	static uint8_t dummy;
 
-	TxHeader.Identifier = 0x11;
+	TxHeader.Identifier = 0x1;
 	TxHeader.IdType = FDCAN_STANDARD_ID;
 	TxHeader.TxFrameType = FDCAN_DATA_FRAME;
 	TxHeader.DataLength = FDCAN_DLC_BYTES_8;
 	TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
 	TxHeader.BitRateSwitch = FDCAN_BRS_OFF;
-	TxHeader.FDFormat = FDCAN_FD_CAN;
+	TxHeader.FDFormat = FDCAN_CLASSIC_CAN;
 	TxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	TxHeader.MessageMarker = 0;
 
-	printf("-> Send CAN Data = ");
+	printf("-> Send CAN Data (Id : %d) = ",TxHeader.Identifier);
 	for (int i = 0; i < sizeof(TxData); i++){
 		TxData[i] = dummy++;
 		printf("0x%x ",TxData[i]);
